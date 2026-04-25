@@ -41,11 +41,12 @@ anchor-framework-simulator/
 
 This repository implements the framework described in:
 
-- **Rudd, M.A. (2026).** An institutional framework for modeling the supply side of time preference. *SSRN preprint*. <https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6630139>
+- **Rudd, M.A. (2026c).** An institutional framework for modeling the supply side of time preference. *SSRN preprint*. <https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6630139>
 
 Building on:
 
-- **Rudd, M.A. (2026).** The volitional deficit: institutional economics, Bitcoin governance, and the challenge of algorithmic velocity. *SSRN preprint*. <https://dx.doi.org/10.2139/ssrn.6556019>
+- **Rudd, M.A. (2026a).** The temporal architecture of deliberation under emerging technologies. *SSRN preprint*. <https://dx.doi.org/10.2139/ssrn.6630139>  
+- **Rudd, M.A. (2026b).** The volitional deficit: institutional economics, Bitcoin governance, and the challenge of algorithmic velocity. *SSRN preprint*. <https://dx.doi.org/10.2139/ssrn.6556019>
 
 ## Citation
 
