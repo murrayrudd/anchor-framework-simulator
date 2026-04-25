@@ -17,7 +17,7 @@ pip install -r requirements.txt
 python generate_figures.py
 ```
 
-This produces five PNG files in the working directory. To use the framework programmatically:
+This produces PNG files in the working directory. To use the framework programmatically:
 
 ```python
 from anchor_framework import FrameworkParameters, rho_star, steady_state_B
