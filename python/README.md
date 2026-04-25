@@ -5,7 +5,7 @@ This directory contains the Python implementation of the framework developed in 
 ## Files
 
 - **`anchor_framework.py`** — Core module. Implements the framework's equations: depreciation functions $\delta_X(v)$, supply functions $\sigma_X(\cdot)$, steady-state stocks $B^*, I^*, H^*$, existence channel $\phi_E$, salience channel $\phi_Z$, and steady-state effective time preference $\rho^*$. Provides `FrameworkParameters` (a dataclass with all parameter defaults) and callable functions for each quantity.
-- **`generate_figures.py`** — Reproduces Figures 3 through 7 of the paper. Each figure is a single panel; each function returns a `matplotlib.figure.Figure` and optionally saves a PNG.
+- **`generate_figures.py`** — Reproduces Figures 1 through 7 of the paper. Each figure is a single panel; each function returns a `matplotlib.figure.Figure` and optionally saves a PNG.
 - **`requirements.txt`** — Dependencies: `numpy`, `scipy`, `matplotlib`.
 
 ## Installation and usage
@@ -52,4 +52,4 @@ These parameter choices are illustrative rather than empirically calibrated. For
 
 ## Reference
 
-Rudd, M.A. (2026). An institutional framework for modeling the supply side of time preference. *SSRN preprint*.
+Rudd, M.A. (2026). An institutional framework for modeling the supply side of time preference. *SSRN preprint*. <https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6630139>
