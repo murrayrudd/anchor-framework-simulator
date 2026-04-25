@@ -41,7 +41,7 @@ anchor-framework-simulator/
 
 This repository implements the framework described in:
 
-- **Rudd, M.A. (2026).** An institutional framework for modeling the supply side of time preference. *SSRN preprint*.
+- **Rudd, M.A. (2026).** An institutional framework for modeling the supply side of time preference. *SSRN preprint*. <https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6630139>
 
 Building on:
 
