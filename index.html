@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Institutional Anchor Framework: Time Preference Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a1018;color:#e2e8f0;font-family:'IBM Plex Sans',system-ui,sans-serif;padding:20px;min-height:100vh}
+.wrap{max-width:1200px;margin:0 auto}
+.header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.logo{width:36px;height:36px;border-radius:6px;background:linear-gradient(135deg,#5eead4,#0d9488);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#0a1018;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+.header h1{font-size:18px;font-weight:700;letter-spacing:-.01em}
+.header p{font-size:11px;color:#64748b;margin-top:3px}
+.main{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+.panel{width:280px;flex-shrink:0;background:#0f1825;border:1px solid #1e293b;border-radius:8px;padding:16px 14px}
+.charts{flex:1;min-width:0}
+.sec{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;color:#64748b;letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #1e293b}
+.sec:not(:first-of-type){margin-top:14px}
+.srow{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.srow span:last-child{color:#5eead4;font-weight:700;font-family:'JetBrains Mono',monospace}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:5px;background:#1e293b;border-radius:3px;outline:none;cursor:pointer;margin-bottom:12px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#5eead4;cursor:pointer;box-shadow:0 0 8px rgba(94,234,212,.35)}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#5eead4;cursor:pointer;border:none}
+.derived{background:rgba(94,234,212,.07);border:1px solid rgba(94,234,212,.2);border-radius:4px;padding:6px 8px;margin-bottom:6px;font-size:10px;font-family:'JetBrains Mono',monospace;display:flex;justify-content:space-between}
+.derived span:last-child{color:#5eead4;font-weight:700}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.stat{background:#0f1825;border:1px solid #1e293b;border-radius:6px;padding:9px 11px;flex:1;min-width:120px}
+.stat label{font-size:8px;color:#64748b;text-transform:uppercase;font-family:'JetBrains Mono',monospace;display:block;letter-spacing:.08em}
+.stat span{font-size:14px;font-weight:700;font-family:'JetBrains Mono',monospace;display:block;margin-top:3px;color:#e2e8f0}
+.stat span.acc{color:#5eead4}
+.tabs{display:flex;margin-bottom:10px;flex-wrap:wrap}
+.tabs button{padding:7px 12px;border:1px solid #1e293b;background:transparent;color:#64748b;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;border-right:none;letter-spacing:.05em;font-weight:600}
+.tabs button:last-child{border-right:1px solid #1e293b;border-radius:0 5px 5px 0}
+.tabs button:first-child{border-radius:5px 0 0 5px}
+.tabs button.a{background:rgba(94,234,212,.1);color:#5eead4;border-color:#5eead4}
+.tabs button:hover:not(.a){color:#94a3b8}
+.cbox{background:#0f1825;border:1px solid #1e293b;border-radius:8px;padding:14px;position:relative}
+.cbox .desc{font-size:11px;color:#94a3b8;margin-bottom:10px;line-height:1.5;padding-bottom:10px;border-bottom:1px solid #1e293b}
+canvas{width:100%!important;max-height:380px}
+.note{margin-top:12px;padding:12px 14px;background:#0f1825;border:1px solid #1e293b;border-radius:6px;font-size:10px;color:#64748b;line-height:1.6}
+.note strong{color:#94a3b8;font-weight:600}
+.note a{color:#5eead4;text-decoration:none}
+.note a:hover{text-decoration:underline}
+.rst{padding:3px 9px;background:none;border:1px solid #1e293b;color:#64748b;font-family:'JetBrains Mono',monospace;font-size:9px;border-radius:3px;cursor:pointer;font-weight:600;letter-spacing:.05em}
+.rst:hover{border-color:#5eead4;color:#5eead4}
+.shock{background:#0f1825;border:1px solid #1e293b;border-radius:5px;padding:8px 10px;margin-bottom:10px}
+.shock label{font-size:9px;color:#64748b;text-transform:uppercase;font-family:'JetBrains Mono',monospace;letter-spacing:.08em}
+.shock input{width:100%;background:transparent;border:none;color:#5eead4;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;margin-top:2px;outline:none}
+@media(max-width:760px){.panel{width:100%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="header">
+<div class="logo">ρ</div>
+<div>
+<h1>Institutional Anchor Framework: Time Preference Simulator</h1>
+<p>Rudd (2026) &mdash; Supply-side determinants of effective time preference under information velocity</p>
+</div>
+</div>
+
+<div class="main">
+
+<div class="panel" id="controls"></div>
+
+<div class="charts">
+<div class="stats" id="stats"></div>
+<div class="tabs" id="tabs"></div>
+<div class="cbox">
+<div class="desc" id="desc"></div>
+<canvas id="chart"></canvas>
+</div>
+<div class="note">
+<strong>About this model.</strong> Effective time preference ρ* is decomposed into an existence channel (φ_E) operating on three anchor stocks &mdash; biophysical (B), institutional (I), and historical (H) &mdash; and a salience channel (φ_Z) operating on the balance between information velocity (v) and deliberative capacity (D). Each anchor stock evolves with a depreciation rate that rises in v and a supply rate that rises in D; the biophysical stock has a state-dependent supply, generating hysteresis. Parameters not exposed below are held at framework defaults; see paper appendix for full specification.<br><br>
+<strong>Reference.</strong> Rudd, M.A. (2026). An institutional framework for modeling the supply side of time preference. SSRN preprint.<br>
+<strong>Source.</strong> All computations run client-side; no data is collected or transmitted. Code: single self-contained HTML file.
+</div>
+</div>
+
+</div>
+
+</div>
+
+<script>
+// =====================================================================
+// FRAMEWORK CALIBRATION
+// Default parameter values that reproduce the figures in the paper.
+// User-adjustable parameters override these via the params object.
+// =====================================================================
+var DEFAULTS = {
+  // Cobb-Douglas weights (existence channel)
+  a_B: 0.4, a_I: 0.35, a_H: 0.25,
+  // Baseline and salience channel
+  rho_0: 0.05, theta: 1.0, v_0: 1.0,
+  // Biophysical depreciation
+  delta_B0: 0.1058, delta_B1: 0.0817, alpha_B: 1.5,
+  // Institutional depreciation
+  delta_I0: 0.1, delta_I1: 0.157, alpha_I: 1.0,
+  // Historical depreciation
+  delta_H0: 0.1, delta_H1: 0.2, alpha_H: 1.0,
+  // Biophysical supply
+  sigma_bar_B: 0.5, gamma_B: 0.5, beta_B: 0.5, eta_B: 0.7,
+  // Institutional supply
+  sigma_bar_I: 0.5, beta_I: 0.4, eta_I: 0.7,
+  // Historical supply
+  sigma_bar_H: 0.3, beta_H: 0.3, eta_H: 0.7
+};
+
+// User-adjustable parameters (subset)
+var params = {
+  v: 1.5,
+  D: 1.0,
+  alpha_B: 1.5,
+  gamma_B: 0.5,
+  theta: 1.0,
+  a_B: 0.4,
+  a_I: 0.35,
+  rho_0: 0.05,
+  // Shock-tab parameters
+  v_pre: 1.0,
+  v_post: 3.0,
+  D_compensating: 2.5,
+  shock_time: 30,
+  T_horizon: 75
+};
+
+var tab = 0;
+var chart = null;
+
+// =====================================================================
+// FRAMEWORK EQUATIONS
+// =====================================================================
+function getP() {
+  // Merge user-overridden params into framework defaults
+  var p = Object.assign({}, DEFAULTS);
+  p.alpha_B = params.alpha_B;
+  p.gamma_B = params.gamma_B;
+  p.theta = params.theta;
+  p.a_B = params.a_B;
+  p.a_I = params.a_I;
+  p.a_H = Math.max(0.01, 1 - params.a_B - params.a_I); // enforce sum-to-one
+  p.rho_0 = params.rho_0;
+  return p;
+}
+
+function deltaB(v, p) { return p.delta_B0 + p.delta_B1 * Math.pow(v, p.alpha_B); }
+function deltaI(v, p) { return p.delta_I0 + p.delta_I1 * Math.pow(v, p.alpha_I); }
+function deltaH(v, p) { return p.delta_H0 + p.delta_H1 * Math.pow(v, p.alpha_H); }
+
+function sigmaB(B, D, p) {
+  var Bsafe = Math.max(B, 1e-6);
+  return p.sigma_bar_B * Math.pow(Bsafe, p.gamma_B) * (1 + p.beta_B * Math.pow(D, p.eta_B));
+}
+function sigmaI(D, p) { return p.sigma_bar_I + p.beta_I * Math.pow(D, p.eta_I); }
+function sigmaH(D, p) { return p.sigma_bar_H + p.beta_H * Math.pow(D, p.eta_H); }
+
+function ssB(v, D, p) {
+  var num = p.sigma_bar_B * (1 + p.beta_B * Math.pow(D, p.eta_B));
+  var den = deltaB(v, p);
+  return Math.pow(num / den, 1.0 / (1.0 - p.gamma_B));
+}
+function ssI(v, D, p) { return sigmaI(D, p) / deltaI(v, p); }
+function ssH(v, D, p) { return sigmaH(D, p) / deltaH(v, p); }
+
+function phiE(B, I, H, p) {
+  return Math.pow(B, -p.a_B) * Math.pow(I, -p.a_I) * Math.pow(H, -p.a_H);
+}
+function phiZ(v, D, p) {
+  return Math.pow(v / (p.v_0 + D), p.theta);
+}
+
+function rhoStar(v, D, p) {
+  var B = ssB(v, D, p);
+  var I = ssI(v, D, p);
+  var H = ssH(v, D, p);
+  return p.rho_0 * phiE(B, I, H, p) * phiZ(v, D, p);
+}
+
+// =====================================================================
+// SIMULATIONS PER TAB
+// =====================================================================
+
+// Tab 0: rho* vs v at multiple D values (Figure 1 analog)
+function simRhoVsV() {
+  var p = getP();
+  var v_grid = [];
+  for (var v = 0.5; v <= 5.0; v += 0.05) v_grid.push(parseFloat(v.toFixed(3)));
+  var D_levels = [0.5, 1.0, 2.0, 4.0];
+  var series = D_levels.map(function(D) {
+    return {
+      D: D,
+      data: v_grid.map(function(v) { return rhoStar(v, D, p); })
+    };
+  });
+  // Mark the user's current (v, D) point
+  var currentRho = rhoStar(params.v, params.D, p);
+  return {v_grid: v_grid, series: series, current_v: params.v, current_D: params.D, current_rho: currentRho, p: p};
+}
+
+// Tab 1: Shock dynamics — simulate trajectory of B, I, H, rho under velocity shock
+function simShock() {
+  var p = getP();
+  var Tend = params.T_horizon;
+  var dt = 0.5;
+  var n_steps = Math.floor(Tend / dt);
+  var times = [];
+  var noResp = { B: [], I: [], H: [], rho: [] };
+  var withResp = { B: [], I: [], H: [], rho: [] };
+
+  // No response scenario: D stays at 1.0 throughout
+  // Compensating response scenario: D rises at shock time
+  function v_at(t) { return t < params.shock_time ? params.v_pre : params.v_post; }
+  function D_no(t) { return 1.0; }
+  function D_yes(t) { return t < params.shock_time ? 1.0 : params.D_compensating; }
+
+  // Initial conditions: steady state at v_pre, D=1
+  var B_no = ssB(params.v_pre, 1.0, p);
+  var I_no = ssI(params.v_pre, 1.0, p);
+  var H_no = ssH(params.v_pre, 1.0, p);
+  var B_yes = B_no, I_yes = I_no, H_yes = H_no;
+
+  for (var i = 0; i <= n_steps; i++) {
+    var t = i * dt;
+    times.push(t);
+
+    var v = v_at(t);
+
+    // No response
+    var Dn = D_no(t);
+    var dBn = -deltaB(v, p) * B_no + sigmaB(B_no, Dn, p);
+    var dIn = -deltaI(v, p) * I_no + sigmaI(Dn, p);
+    var dHn = -deltaH(v, p) * H_no + sigmaH(Dn, p);
+    B_no = Math.max(1e-6, B_no + dt * dBn);
+    I_no = Math.max(1e-6, I_no + dt * dIn);
+    H_no = Math.max(1e-6, H_no + dt * dHn);
+    var rhoNo = p.rho_0 * phiE(B_no, I_no, H_no, p) * phiZ(v, Dn, p);
+    noResp.B.push(B_no);
+    noResp.I.push(I_no);
+    noResp.H.push(H_no);
+    noResp.rho.push(rhoNo);
+
+    // With response
+    var Dy = D_yes(t);
+    var dBy = -deltaB(v, p) * B_yes + sigmaB(B_yes, Dy, p);
+    var dIy = -deltaI(v, p) * I_yes + sigmaI(Dy, p);
+    var dHy = -deltaH(v, p) * H_yes + sigmaH(Dy, p);
+    B_yes = Math.max(1e-6, B_yes + dt * dBy);
+    I_yes = Math.max(1e-6, I_yes + dt * dIy);
+    H_yes = Math.max(1e-6, H_yes + dt * dHy);
+    var rhoYes = p.rho_0 * phiE(B_yes, I_yes, H_yes, p) * phiZ(v, Dy, p);
+    withResp.B.push(B_yes);
+    withResp.I.push(I_yes);
+    withResp.H.push(H_yes);
+    withResp.rho.push(rhoYes);
+  }
+
+  return {times: times, noResp: noResp, withResp: withResp,
+          rho_pre: p.rho_0 * phiE(ssB(params.v_pre,1,p), ssI(params.v_pre,1,p), ssH(params.v_pre,1,p), p) * phiZ(params.v_pre, 1, p),
+          rho_post_no: noResp.rho[noResp.rho.length-1],
+          rho_post_yes: withResp.rho[withResp.rho.length-1]};
+}
+
+// Tab 2: Offset condition as line plots — D required to hold rho* at target levels
+function simOffset() {
+  var p = getP();
+  var v_grid = [];
+  for (var v = 0.5; v <= 5.0; v += 0.05) v_grid.push(parseFloat(v.toFixed(3)));
+
+  var targets = [0.005, 0.01, 0.02, 0.05, 0.10];
+
+  // For each (v, target rho*), solve for D numerically (bisection on rho_star(v,D))
+  function findD(v, target) {
+    var D_lo = 0.01, D_hi = 20.0;
+    var rhoLo = rhoStar(v, D_lo, p);
+    var rhoHi = rhoStar(v, D_hi, p);
+    if (rhoHi > target) return null;  // infeasible at this v
+    if (rhoLo < target) return D_lo;
+    for (var i = 0; i < 60; i++) {
+      var D_mid = 0.5 * (D_lo + D_hi);
+      var r = rhoStar(v, D_mid, p);
+      if (r > target) D_lo = D_mid; else D_hi = D_mid;
+      if (Math.abs(D_hi - D_lo) < 1e-4) break;
+    }
+    return 0.5 * (D_lo + D_hi);
+  }
+
+  var series = targets.map(function(t) {
+    return {
+      target: t,
+      data: v_grid.map(function(v) { return findD(v, t); })
+    };
+  });
+
+  return {v_grid: v_grid, series: series, p: p};
+}
+
+// Tab 3: Hysteresis — ramp up and down trajectory
+function simHysteresis() {
+  var p = getP();
+  // Phase 1: v=1 → 4.5 over [0,30]
+  // Phase 2: hold at 4.5 over [30,130]
+  // Phase 3: v=4.5 → 1 over [130,160]
+  // Phase 4: hold at 1 over [160,200]   (short hold — recovery incomplete to show hysteresis)
+  function vSched(t) {
+    if (t < 30) return 1.0 + (4.5 - 1.0) * (t / 30);
+    if (t < 130) return 4.5;
+    if (t < 160) return 4.5 - (4.5 - 1.0) * ((t - 130) / 30);
+    return 1.0;
+  }
+
+  var Tend = 200;
+  var dt = 0.5;
+  var n = Math.floor(Tend / dt);
+
+  var B = ssB(1.0, 1.0, p);
+  var rising_v = [], rising_B = [], falling_v = [], falling_B = [];
+
+  for (var i = 0; i <= n; i++) {
+    var t = i * dt;
+    var v = vSched(t);
+    if (i > 0) {
+      var dB = -deltaB(v, p) * B + sigmaB(B, 1.0, p);
+      B = Math.max(1e-6, B + dt * dB);
+    }
+    if (t <= 130) {
+      rising_v.push(v);
+      rising_B.push(B);
+    } else {
+      falling_v.push(v);
+      falling_B.push(B);
+    }
+  }
+
+  // Steady-state locus
+  var locus_v = [], locus_B = [];
+  for (var v = 1.0; v <= 4.5; v += 0.05) {
+    locus_v.push(parseFloat(v.toFixed(3)));
+    locus_B.push(ssB(v, 1.0, p));
+  }
+
+  return {
+    rising_v: rising_v, rising_B: rising_B,
+    falling_v: falling_v, falling_B: falling_B,
+    locus_v: locus_v, locus_B: locus_B,
+    B_initial: ssB(1.0, 1.0, p),
+    B_final: B,
+    p: p
+  };
+}
+
+// Tab 4: Complementarity — rho vs B at three (I, H) scenarios
+function simComplementarity() {
+  var p = getP();
+  var B_grid = [];
+  for (var B = 0.5; B <= 30.0; B += 0.5) B_grid.push(parseFloat(B.toFixed(2)));
+
+  var scenarios = [
+    {name: "Degraded (I=H=0.5)", I: 0.5, H: 0.5, color: "#1a1a1a"},
+    {name: "Moderate (I=2.0, H=1.5)", I: 2.0, H: 1.5, color: "#5eead4"},
+    {name: "Robust (I=4.0, H=2.5)", I: 4.0, H: 2.5, color: "#a7f3d0"}
+  ];
+
+  var v_held = params.v, D_held = params.D;
+  var pz = phiZ(v_held, D_held, p);
+
+  var series = scenarios.map(function(s) {
+    return {
+      name: s.name,
+      color: s.color,
+      data: B_grid.map(function(B) {
+        return p.rho_0 * phiE(B, s.I, s.H, p) * pz;
+      })
+    };
+  });
+
+  return {B_grid: B_grid, series: series, v: v_held, D: D_held, p: p};
+}
+
+// =====================================================================
+// UI BUILDERS
+// =====================================================================
+function slider(id, label, val, mn, mx, st, fmt) {
+  return '<div class="srow"><span>' + label + '</span><span id="v_' + id + '">' + (fmt ? fmt(val) : val) + '</span></div><input type="range" id="s_' + id + '" min="' + mn + '" max="' + mx + '" step="' + st + '" value="' + val + '">';
+}
+
+function buildControls() {
+  var p = params;
+  var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><span style="font-family:\'JetBrains Mono\',monospace;font-size:10px;font-weight:700;letter-spacing:.1em">PARAMETERS</span><button class="rst" onclick="resetAll()">RESET</button></div>';
+
+  h += '<div class="sec">CURRENT POINT</div>';
+  h += slider("v", "Information velocity, v", p.v, 0.5, 5, 0.1, function(v){return parseFloat(v).toFixed(2)});
+  h += slider("D", "Deliberative capacity, D", p.D, 0.1, 6, 0.1, function(v){return parseFloat(v).toFixed(2)});
+
+  // Derived rho* at current point
+  var pp = getP();
+  var currentRho = rhoStar(p.v, p.D, pp);
+  h += '<div class="derived"><span>Current ρ*</span><span>' + currentRho.toFixed(4) + '</span></div>';
+
+  h += '<div class="sec">FRAMEWORK</div>';
+  h += slider("alpha_B", "α_B (depreciation convexity)", p.alpha_B, 1.0, 2.5, 0.1, function(v){return parseFloat(v).toFixed(1)});
+  h += slider("gamma_B", "γ_B (state-dependence)", p.gamma_B, 0.0, 0.9, 0.05, function(v){return parseFloat(v).toFixed(2)});
+  h += slider("theta", "θ (salience exponent)", p.theta, 0.5, 2.0, 0.1, function(v){return parseFloat(v).toFixed(1)});
+  h += slider("rho_0", "ρ₀ (baseline)", p.rho_0, 0.01, 0.10, 0.005, function(v){return parseFloat(v).toFixed(3)});
+
+  h += '<div class="sec">ANCHOR WEIGHTS</div>';
+  h += slider("a_B", "Biophysical, a_B", p.a_B, 0.1, 0.7, 0.05, function(v){return parseFloat(v).toFixed(2)});
+  h += slider("a_I", "Institutional, a_I", p.a_I, 0.1, 0.7, 0.05, function(v){return parseFloat(v).toFixed(2)});
+  var aH = Math.max(0.01, 1 - p.a_B - p.a_I);
+  h += '<div class="derived"><span>Historical, a_H</span><span>' + aH.toFixed(2) + '</span></div>';
+
+  // Shock-tab parameters (only relevant on Tab 1)
+  h += '<div class="sec">SHOCK SCENARIO</div>';
+  h += slider("v_pre", "v before shock", p.v_pre, 0.5, 3, 0.1, function(v){return parseFloat(v).toFixed(2)});
+  h += slider("v_post", "v after shock", p.v_post, 0.5, 5, 0.1, function(v){return parseFloat(v).toFixed(2)});
+  h += slider("D_compensating", "D after shock (response)", p.D_compensating, 0.5, 6, 0.1, function(v){return parseFloat(v).toFixed(2)});
+
+  document.getElementById("controls").innerHTML = h;
+
+  var ids = ["v","D","alpha_B","gamma_B","theta","rho_0","a_B","a_I","v_pre","v_post","D_compensating"];
+  var fmts = [
+    function(v){return parseFloat(v).toFixed(2)},
+    function(v){return parseFloat(v).toFixed(2)},
+    function(v){return parseFloat(v).toFixed(1)},
+    function(v){return parseFloat(v).toFixed(2)},
+    function(v){return parseFloat(v).toFixed(1)},
+    function(v){return parseFloat(v).toFixed(3)},
+    function(v){return parseFloat(v).toFixed(2)},
+    function(v){return parseFloat(v).toFixed(2)},
+    function(v){return parseFloat(v).toFixed(2)},
+    function(v){return parseFloat(v).toFixed(2)},
+    function(v){return parseFloat(v).toFixed(2)}
+  ];
+  ids.forEach(function(id, i) {
+    document.getElementById("s_" + id).addEventListener("input", function(ev) {
+      var v = parseFloat(ev.target.value);
+      params[id] = v;
+      document.getElementById("v_" + id).textContent = fmts[i](v);
+      // Update derived displays
+      var pp2 = getP();
+      var newRho = rhoStar(params.v, params.D, pp2);
+      var derivedNodes = document.querySelectorAll(".derived");
+      if (derivedNodes.length > 0) {
+        derivedNodes[0].children[1].textContent = newRho.toFixed(4);
+      }
+      if (derivedNodes.length > 1) {
+        var aH2 = Math.max(0.01, 1 - params.a_B - params.a_I);
+        derivedNodes[1].children[1].textContent = aH2.toFixed(2);
+      }
+      update();
+    });
+  });
+}
+
+function buildTabs() {
+  var names = ["TIME PREFERENCE","SHOCK","OFFSET","HYSTERESIS","COMPLEMENTARITY"];
+  var h = "";
+  names.forEach(function(n, i) {
+    h += '<button class="' + (tab === i ? "a" : "") + '" onclick="setTab(' + i + ')">' + n + '</button>';
+  });
+  document.getElementById("tabs").innerHTML = h;
+}
+
+function setTab(t) {
+  tab = t;
+  buildTabs();
+  update();
+}
+
+function resetAll() {
+  params = {
+    v: 1.5, D: 1.0,
+    alpha_B: 1.5, gamma_B: 0.5, theta: 1.0,
+    a_B: 0.4, a_I: 0.35, rho_0: 0.05,
+    v_pre: 1.0, v_post: 3.0, D_compensating: 2.5,
+    shock_time: 30, T_horizon: 75
+  };
+  tab = 0;
+  buildControls();
+  buildTabs();
+  update();
+}
+
+// =====================================================================
+// CHART RENDERING
+// =====================================================================
+var DESCRIPTIONS = [
+  "Steady-state effective time preference ρ* against information velocity v, at four levels of deliberative capacity D. Higher D flattens the response; the curves rise convexly when α_B > 1. Vertical line marks the current v; horizontal line marks ρ₀ baseline.",
+  "Trajectories of the three anchor stocks (B, I, H) and effective time preference ρ following an information-velocity shock. Solid lines: no deliberative response (D held at 1.0). Dashed lines: D rises to the compensating value at shock time. The deliberative response is a partial buffer, not a substitute for moderating compressive pressures.",
+  "Iso-ρ* contours on the (v, D) plane, drawn as lines showing the deliberative capacity required to maintain each target ρ* as v rises. Curves diverge at high v: beyond a critical velocity, no feasible D achieves the target. The convexity reflects α_B > 1 in biophysical depreciation.",
+  "Hysteresis in biophysical stock recovery under a v ramp-up-and-down trajectory. Depletion path tracks above the steady-state locus (stocks lag rising depreciation); recovery path tracks below (depleted stocks provide weaker discovery signals). Stocks do not return to initial levels even after v returns to baseline.",
+  "Effective time preference ρ as a function of biophysical investment B, at three configurations of complementary stocks I and H. v and D held at current panel values. When complementary stocks are degraded, even substantial B investment leaves ρ well above the level achievable when complementary stocks are robust — illustrating level-complementarity."
+];
+
+function update() {
+  document.getElementById("desc").textContent = DESCRIPTIONS[tab];
+  if (chart) chart.destroy();
+  var ctx = document.getElementById("chart").getContext("2d");
+
+  var commonOpts = {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: { duration: 0 },
+    interaction: { mode: "index", intersect: false },
+    plugins: {
+      legend: { display: true, labels: { color: "#94a3b8", font: { family: "'JetBrains Mono',monospace", size: 10 } } },
+      tooltip: { backgroundColor: "#0f1825", borderColor: "#1e293b", borderWidth: 1, titleColor: "#e2e8f0", bodyColor: "#94a3b8", titleFont: { family: "'JetBrains Mono',monospace", size: 11 }, bodyFont: { family: "'JetBrains Mono',monospace", size: 11 } }
+    }
+  };
+
+  var commonScales = {
+    y: { ticks: { color: "#64748b", font: { family: "'JetBrains Mono',monospace", size: 9 } }, grid: { color: "#1e293b" }, title: { color: "#94a3b8", font: { family: "'JetBrains Mono',monospace", size: 10 } } },
+    x: { ticks: { color: "#64748b", font: { family: "'JetBrains Mono',monospace", size: 9 }, maxTicksLimit: 10 }, grid: { color: "#1e293b" }, title: { color: "#94a3b8", font: { family: "'JetBrains Mono',monospace", size: 10 } } }
+  };
+
+  var stats = document.getElementById("stats");
+
+  if (tab === 0) {
+    var R = simRhoVsV();
+    var colors = ["#ef4444","#f59e0b","#5eead4","#94a3b8"];
+    var styles = [[],[],[8,4],[2,3]];
+    var datasets = R.series.map(function(s, i) {
+      return {
+        label: "D = " + s.D.toFixed(1),
+        data: s.data,
+        borderColor: colors[i],
+        borderDash: styles[i],
+        borderWidth: 2,
+        pointRadius: 0,
+        tension: 0.2
+      };
+    });
+    // Highlight current point
+    var idx = R.v_grid.findIndex(function(v) { return Math.abs(v - R.current_v) < 0.05; });
+    var marker = R.v_grid.map(function() { return null; });
+    if (idx >= 0) marker[idx] = R.current_rho;
+    datasets.push({
+      label: "Current point",
+      data: marker,
+      borderColor: "#ffffff",
+      backgroundColor: "#ffffff",
+      pointRadius: 5,
+      pointHoverRadius: 6,
+      showLine: false
+    });
+    var cfg = {
+      type: "line",
+      data: { labels: R.v_grid.map(function(v){return v.toFixed(2)}), datasets: datasets },
+      options: Object.assign({}, commonOpts, { scales: {
+        y: Object.assign({}, commonScales.y, { title: { display: true, text: "Effective time preference, ρ*", color: "#94a3b8", font: { family: "'JetBrains Mono',monospace", size: 10 } }, min: 0, suggestedMax: 0.3 }),
+        x: Object.assign({}, commonScales.x, { title: { display: true, text: "Information velocity, v", color: "#94a3b8", font: { family: "'JetBrains Mono',monospace", size: 10 } } })
+      } })
+    };
+    chart = new Chart(ctx, cfg);
+
+    // Stats: current rho*, baseline, ratio
+    stats.innerHTML = [
+      ["Current ρ*", R.current_rho.toFixed(4), "acc"],
+      ["Baseline ρ₀", R.p.rho_0.toFixed(3), ""],
+      ["Ratio ρ*/ρ₀", (R.current_rho / R.p.rho_0).toFixed(2), R.current_rho > R.p.rho_0 ? "acc" : ""],
+      ["B at point", ssB(params.v, params.D, R.p).toFixed(2), ""],
+      ["I at point", ssI(params.v, params.D, R.p).toFixed(2), ""]
+    ].map(function(s) {
+      return '<div class="stat"><label>' + s[0] + '</label><span class="' + s[2] + '">' + s[1] + '</span></div>';
+    }).join("");
+
+  } else if (tab === 1) {
+    var S = simShock();
+    var labels = S.times.map(function(t) { return t.toFixed(1); });
+    var cfg = {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [
+          { label: "B (no response)", data: S.noResp.B, borderColor: "#5eead4", borderWidth: 2, pointRadius: 0, tension: 0.2, yAxisID: "yStock" },
+          { label: "B (response)", data: S.withResp.B, borderColor: "#5eead4", borderDash: [6,3], borderWidth: 2, pointRadius: 0, tension: 0.2, yAxisID: "yStock" },
+          { label: "ρ (no response)", data: S.noResp.rho, borderColor: "#ef4444", borderWidth: 2, pointRadius: 0, tension: 0.2, yAxisID: "yRho" },
+          { label: "ρ (response)", data: S.withResp.rho, borderColor: "#ef4444", borderDash: [6,3], borderWidth: 2, pointRadius: 0, tension: 0.2, yAxisID: "yRho" }
+        ]
+      },
+      options: Object.assign({}, commonOpts, { scales: {
+        yStock: Object.assign({}, commonScales.y, { position: "left", title: { display: true, text: "B (biophysical stock)", color: "#5eead4", font: { family: "'JetBrains Mono',monospace", size: 10 } } }),
+        yRho: Object.assign({}, commonScales.y, { position: "right", title: { display: true, text: "ρ (effective time preference)", color: "#ef4444", font: { family: "'JetBrains Mono',monospace", size: 10 } }, grid: { drawOnChartArea: false } }),
+        x: Object.assign({}, commonScales.x, { title: { display: true, text: "Time (t)", color: "#94a3b8", font: { family: "'JetBrains Mono',monospace", size: 10 } } })
+      } })
+    };
+    chart = new Chart(ctx, cfg);
+
+    stats.innerHTML = [
+      ["ρ pre-shock", S.rho_pre.toFixed(4), ""],
+      ["ρ no response", S.rho_post_no.toFixed(4), "acc"],
+      ["ρ with response", S.rho_post_yes.toFixed(4), "acc"],
+      ["Buffer ratio", ((S.rho_post_no - S.rho_post_yes) / (S.rho_post_no - S.rho_pre)).toFixed(2), ""]
+    ].map(function(s) {
+      return '<div class="stat"><label>' + s[0] + '</label><span class="' + s[2] + '">' + s[1] + '</span></div>';
+    }).join("");
+
+  } else if (tab === 2) {
+    var O = simOffset();
+    var colors = ["#a7f3d0","#5eead4","#0d9488","#f59e0b","#ef4444"];
+    var datasets = O.series.map(function(s, i) {
+      return {
+        label: "ρ* = " + s.target.toFixed(3),
+        data: s.data,
+        borderColor: colors[i],
+        borderWidth: 2,
+        pointRadius: 0,
+        tension: 0.2,
+        spanGaps: false
+      };
+    });
+    var cfg = {
+      type: "line",
+      data: { labels: O.v_grid.map(function(v){return v.toFixed(2)}), datasets: datasets },
+      options: Object.assign({}, commonOpts, { scales: {
+        y: Object.assign({}, commonScales.y, { title: { display: true, text: "Required deliberative capacity, D", color: "#94a3b8", font: { family: "'JetBrains Mono',monospace", size: 10 } }, min: 0, suggestedMax: 6 }),
+        x: Object.assign({}, commonScales.x, { title: { display: true, text: "Information velocity, v", color: "#94a3b8", font: { family: "'JetBrains Mono',monospace", size: 10 } } })
+      } })
+    };
+    chart = new Chart(ctx, cfg);
+
+    // Critical velocity: where the rho_0 contour diverges (D required > 6, our chart ceiling)
+    var rho0_line = O.series.find(function(s){ return Math.abs(s.target - 0.05) < 0.001; });
+    var critical_v = "n/a";
+    if (rho0_line) {
+      for (var k = 0; k < rho0_line.data.length; k++) {
+        if (rho0_line.data[k] === null || rho0_line.data[k] > 6) {
+          critical_v = O.v_grid[k].toFixed(2);
+          break;
+        }
+      }
+    }
+    stats.innerHTML = [
+      ["Critical v (ρ₀)", critical_v, "acc"],
+      ["α_B convexity", O.p.alpha_B.toFixed(2), ""],
+      ["θ salience", O.p.theta.toFixed(2), ""]
+    ].map(function(s) {
+      return '<div class="stat"><label>' + s[0] + '</label><span class="' + s[2] + '">' + s[1] + '</span></div>';
+    }).join("");
+
+  } else if (tab === 3) {
+    var H = simHysteresis();
+    // Compute hysteresis gap: B difference between depletion and recovery paths at v=2.5
+    var gap_v = 2.5;
+    var dep_B_at_v = null, rec_B_at_v = null;
+    for (var k = 0; k < H.rising_v.length; k++) {
+      if (Math.abs(H.rising_v[k] - gap_v) < 0.1 && H.rising_v[k] >= H.rising_v[Math.max(k-1,0)]) {
+        dep_B_at_v = H.rising_B[k];
+        break;
+      }
+    }
+    for (var k = 0; k < H.falling_v.length; k++) {
+      if (Math.abs(H.falling_v[k] - gap_v) < 0.1) {
+        rec_B_at_v = H.falling_B[k];
+        break;
+      }
+    }
+    var gap = (dep_B_at_v && rec_B_at_v) ? (dep_B_at_v - rec_B_at_v).toFixed(2) : "n/a";
+
+    // Plot as scatter with lines, since x-axis values are not uniform
+    var cfg = {
+      type: "scatter",
+      data: {
+        datasets: [
+          { label: "Steady-state locus", data: H.locus_v.map(function(v,i){return{x:v,y:H.locus_B[i]}}), borderColor: "#64748b", backgroundColor: "transparent", borderWidth: 1, borderDash: [3,3], pointRadius: 0, showLine: true, tension: 0.2 },
+          { label: "Depletion path (v rising)", data: H.rising_v.map(function(v,i){return{x:v,y:H.rising_B[i]}}), borderColor: "#5eead4", backgroundColor: "transparent", borderWidth: 2, pointRadius: 0, showLine: true, tension: 0.1 },
+          { label: "Recovery path (v falling)", data: H.falling_v.map(function(v,i){return{x:v,y:H.falling_B[i]}}), borderColor: "#5eead4", backgroundColor: "transparent", borderWidth: 2, borderDash: [6,3], pointRadius: 0, showLine: true, tension: 0.1 }
+        ]
+      },
+      options: Object.assign({}, commonOpts, { scales: {
+        y: Object.assign({}, commonScales.y, { title: { display: true, text: "Biophysical anchor stock, B", color: "#94a3b8", font: { family: "'JetBrains Mono',monospace", size: 10 } }, min: 0 }),
+        x: Object.assign({}, commonScales.x, { type: "linear", title: { display: true, text: "Information velocity, v", color: "#94a3b8", font: { family: "'JetBrains Mono',monospace", size: 10 } }, min: 1.0, max: 4.5 })
+      } })
+    };
+    chart = new Chart(ctx, cfg);
+
+    stats.innerHTML = [
+      ["B at v=1 (initial)", H.B_initial.toFixed(2), ""],
+      ["Gap at v=2.5", gap, "acc"],
+      ["γ_B (state-dep.)", H.p.gamma_B.toFixed(2), ""],
+      ["α_B (convexity)", H.p.alpha_B.toFixed(2), ""]
+    ].map(function(s) {
+      return '<div class="stat"><label>' + s[0] + '</label><span class="' + s[2] + '">' + s[1] + '</span></div>';
+    }).join("");
+
+  } else if (tab === 4) {
+    var C = simComplementarity();
+    var datasets = C.series.map(function(s, i) {
+      return {
+        label: s.name,
+        data: s.data,
+        borderColor: ["#ef4444","#f59e0b","#5eead4"][i],
+        borderWidth: 2,
+        pointRadius: 0,
+        tension: 0.2
+      };
+    });
+    // Also show baseline rho_0
+    var baseline = C.B_grid.map(function(){ return C.p.rho_0; });
+    datasets.push({
+      label: "ρ₀ baseline",
+      data: baseline,
+      borderColor: "#64748b",
+      borderDash: [3,3],
+      borderWidth: 1,
+      pointRadius: 0
+    });
+    var cfg = {
+      type: "line",
+      data: { labels: C.B_grid.map(function(b){return b.toFixed(1)}), datasets: datasets },
+      options: Object.assign({}, commonOpts, { scales: {
+        y: Object.assign({}, commonScales.y, { title: { display: true, text: "Effective time preference, ρ", color: "#94a3b8", font: { family: "'JetBrains Mono',monospace", size: 10 } }, min: 0, suggestedMax: 0.06 }),
+        x: Object.assign({}, commonScales.x, { title: { display: true, text: "Biophysical stock, B", color: "#94a3b8", font: { family: "'JetBrains Mono',monospace", size: 10 } } })
+      } })
+    };
+    chart = new Chart(ctx, cfg);
+
+    stats.innerHTML = [
+      ["v held", C.v.toFixed(2), ""],
+      ["D held", C.D.toFixed(2), ""],
+      ["ρ₀ baseline", C.p.rho_0.toFixed(3), ""],
+      ["Degraded floor", (C.p.rho_0 * phiE(30, 0.5, 0.5, C.p) * phiZ(C.v, C.D, C.p)).toFixed(4), "acc"]
+    ].map(function(s) {
+      return '<div class="stat"><label>' + s[0] + '</label><span class="' + s[2] + '">' + s[1] + '</span></div>';
+    }).join("");
+  }
+}
+
+buildControls();
+buildTabs();
+update();
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this software or simulator, please cite the underlying paper as below."
+title: "Institutional Anchor Framework: Time Preference Simulator"
+abstract: "Interactive simulator and Python reproduction code for the institutional-anchor framework for the supply side of time preference."
+authors:
+  - family-names: "Rudd"
+    given-names: "Murray A."
+    orcid: "https://orcid.org/0000-0001-9533-5070"
+version: "1.0.0"
+date-released: "2026-04-25"
+license: MIT
+repository-code: "https://github.com/murrayrudd/anchor-framework-simulator"
+url: "https://murrayrudd.github.io/anchor-framework-simulator/"
+preferred-citation:
+  type: article
+  title: "An institutional framework for modeling the supply side of time preference"
+  authors:
+    - family-names: "Rudd"
+      given-names: "Murray A."
+      orcid: "https://orcid.org/0000-0001-9533-5070"
+  journal: "SSRN preprint"
+  year: 2026
