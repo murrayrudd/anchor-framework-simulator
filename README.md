@@ -1,26 +1,34 @@
 # Institutional Anchor Framework
 
-Interactive simulator and Python reproduction code for the institutional-anchor framework for the supply side of time preference, based on Rudd (2026).
+Python reproduction and extension code for the "Keeping the future visible: institutional anchors and time preference in ecosystem service valuation" working paper from Rudd (2026).
 
 ## Overview
 
-This repository accompanies a working paper that develops a formal framework in which revealed time preferences emerge from an institutional environment characterized by the supply of durable anchor stocks (biophysical, institutional, and historical), the rate of information velocity, and the deliberative capacity available to engage with anchor material. The framework specifies the structural channels through which compressive technologies erode the conditions for long-horizon deliberation, and the conditions under which deliberative infrastructure can offset compressive pressure.
+This repository accompanies a paper that develops a formal framework in which revealed time preferences emerge from an institutional environment characterized by the supply of durable anchor stocks (biophysical, institutional, and historical), the rate of information velocity, and the deliberative capacity available to engage with anchor material. The biophysical anchor is split into a physical natural capital stock and the legible reference that monitoring and discovery produce from it, distinguishing the physical state of an ecosystem from the institutional capacity to keep that state visible. The framework specifies the structural channels through which compressive technologies erode the conditions for long-horizon deliberation and the conditions under which deliberative infrastructure can offset compressive pressure.
 
-## Two ways to use this repository
+The code reproduces all figures in the paper and exposes the framework's equations as a callable API for extension and sensitivity analysis. The default parameters are illustrative rather than empirically estimated; the framework is diagnostic, and its structural parameters are intended to be calibrated against evidence for the system under study.
 
-### Interactive simulator (no installation required)
+## Usage
 
-A browser-based simulator with adjustable parameters and five chart views corresponding to the paper's main figures.
+The code is in the [`python/`](python/) directory and requires Python 3.8 or later.
 
-**Live tool:** <https://murrayrudd.github.io/anchor-framework-simulator/>
+```bash
+cd python
+pip install -r requirements.txt
+python generate_figures.py        # regenerates Figures 1-7 (PNG + SVG)
+```
 
-The simulator is intended for readers who want to develop intuition for the framework's behavior — how effective time preference responds to information velocity, where threshold and hysteresis structures emerge, how deliberative capacity can offset (or fail to offset) compressive pressure. All computations run client-side; no data is collected or transmitted. The single-file implementation (`index.html`) has no build step or server dependencies.
+To use the framework programmatically:
 
-### Python reproduction (academic and research use)
+```python
+from anchor_framework import FrameworkParameters, rho_star, baseline_stocks, simulate_dynamics
 
-A Python module reproducing all figures in the paper and providing the framework's equations as a callable API for extension and sensitivity analysis.
+p = FrameworkParameters()                 # default (illustrative) calibration
+rho = rho_star(v=2.0, D=1.5, p=p)         # steady-state effective time preference
+N0, B0, I0, H0 = baseline_stocks(1.0, 1.0, p)
+```
 
-The Python code is in the [`python/`](python/) directory. See [`python/README.md`](python/README.md) for installation, usage, and parameter calibration details.
+See [`python/README.md`](python/README.md) for the model structure, the full API, and parameter-calibration details.
 
 ## What's in this repository
 
@@ -29,11 +37,10 @@ anchor-framework-simulator/
 ├── README.md                       # This file
 ├── LICENSE                         # MIT License
 ├── CITATION.cff                    # Citation metadata
-├── index.html                      # Interactive simulator (single file)
 └── python/
-    ├── README.md                   # Python-specific documentation
+    ├── README.md                   # Model structure, API, and calibration
     ├── requirements.txt            # Dependencies (numpy, scipy, matplotlib)
-    ├── anchor_framework.py         # Core framework module
+    ├── anchor_framework.py         # Core framework module (four-stock N/B model)
     └── generate_figures.py         # Reproduces all paper figures
 ```
 
@@ -41,23 +48,23 @@ anchor-framework-simulator/
 
 This repository implements the framework described in:
 
-- **Rudd, M.A. (2026c).** An institutional framework for modeling the supply side of time preference. *SSRN preprint*. <https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6630139>
+- **Rudd, M.A. (2026).** Keeping the future visible: institutional anchors and time preference in ecosystem service valuation. *SSRN preprint*. *[URL to follow]*
 
 Building on:
 
-- **Rudd, M.A. (2026a).** The temporal architecture of deliberation under emerging technologies. *SSRN preprint*. <https://dx.doi.org/10.2139/ssrn.6630139>  
-- **Rudd, M.A. (2026b).** The volitional deficit: institutional economics, Bitcoin governance, and the challenge of algorithmic velocity. *SSRN preprint*. <https://dx.doi.org/10.2139/ssrn.6556019>
+- **Rudd, M.A. (2026a).** The temporal architecture of deliberation under emerging technologies. *SSRN preprint*. <https://dx.doi.org/10.2139/ssrn.6630139>
 
 ## Citation
 
-If you use this code or simulator in research or publications, please cite the underlying paper:
+If you use this code in research or publications, please cite the underlying paper:
 
 ```bibtex
 @article{Rudd2026anchor,
   author  = {Rudd, Murray A.},
-  title   = {An institutional framework for modeling the supply side of time preference},
+  title   = {Keeping the future visible: institutional anchors and time preference in ecosystem service valuation},
   journal = {SSRN preprint},
-  year    = {2026}
+  year    = {2026},
+  note    = {URL to follow}
 }
 ```
 
@@ -71,6 +78,6 @@ MIT License. See [LICENSE](LICENSE) for details.
 
 **Murray A. Rudd, Ph.D.** — Institutional economist and policy researcher
 
-- Blog: [murrayrudd.pro](https://murrayrudd.pro)
 - ORCID: [0000-0001-9533-5070](https://orcid.org/0000-0001-9533-5070)
+- SSRN: [SSRN profile](https://papers.ssrn.com/sol3/cf_dev/AbsByAuth.cfm?per_id=5958022)
 - Google Scholar: [Profile](https://scholar.google.co.uk/citations?hl=en&user=84qbofEAAAAJ)
