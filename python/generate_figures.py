@@ -1,13 +1,19 @@
 """
-Reproduce Figures 1-7 of the paper from the four-stock (N/B) anchor framework.
+Reproduce Figures 1-9 of the paper from the four-stock (N/B) anchor framework.
 
 Each function returns a matplotlib Figure and saves PNG + SVG to the working
 directory. Run as a script to regenerate all figures:
 
     python generate_figures.py
+
+Figures 1-7 derive from the anchor_framework simulation. Figures 8-9 are the
+cost-benefit appraisal panels (the "what is at stake" illustration and the
+break-even family); they depend only on the discounting relation, not on the
+simulation, and correspond to the {X} and {Y} figure placeholders in the draft.
 """
 
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from dataclasses import replace
 
@@ -20,6 +26,8 @@ from anchor_framework import (
 plt.rcParams.update({
     'font.family': 'serif', 'font.size': 10, 'axes.labelsize': 10, 'axes.titlesize': 10,
     'xtick.labelsize': 9, 'ytick.labelsize': 9, 'legend.fontsize': 8.5,
+    'mathtext.fontset': 'dejavuserif',  # NEW: serif math symbols (rho*, eta) to match body
+                                        # text; remove this line to restore default sans math
     'figure.dpi': 120, 'savefig.dpi': 300, 'axes.spines.top': False,
     'axes.spines.right': False, 'axes.linewidth': 0.8, 'lines.linewidth': 1.6,
 })
@@ -29,6 +37,12 @@ GK = ['#1a1a1a', '#454545', '#7a7a7a', '#aeaeae']
 def _save(fig, name):
     for ext in ('png', 'svg'):
         fig.savefig(f'{name}.{ext}', bbox_inches='tight')
+
+
+def _trunc(cmap, lo, hi, n=256):
+    """Truncated colormap, used for the light conserve-region fill in figure_8."""
+    return mpl.colors.LinearSegmentedColormap.from_list(
+        't', plt.get_cmap(cmap)(np.linspace(lo, hi, n)))
 
 
 def figure_1(p=None):
@@ -179,8 +193,101 @@ def figure_7(p=None):
     fig.tight_layout(); _save(fig, 'figure_7'); return fig
 
 
+def figure_8(eta_g=0.02, bc=5.0, Tmax=100):
+    """CBA appraisal map: NPV per unit cost over (T, rho*) with break-even frontier.
+
+    Stylized appraisal with all costs at t=0 and a single benefit at horizon T;
+    continuous discounting, NPV = bc*exp(-rT) - 1, r = rho* + eta_g. Conserve when
+    NPV > 0; break-even rho* = ln(bc)/T - eta_g. Independent of anchor_framework.
+    """
+    T = np.linspace(1, Tmax, 700)
+    rho = np.linspace(0.0, 0.04, 700)
+    TT, RR = np.meshgrid(T, rho)
+    NPV = bc * np.exp(-(RR + eta_g) * TT) - 1.0
+
+    fig, ax = plt.subplots(figsize=(6.4, 4.8))
+    cmap = _trunc('Greys', 0.0, 0.30)
+    cf = ax.contourf(TT, RR, np.where(NPV > 0, NPV, np.nan),
+                     levels=np.linspace(0.0, 3.0, 13), cmap=cmap, extend='max')
+
+    # contour labels aligned at a common height for consistency
+    y_lab = 0.033
+    r_lab = y_lab + eta_g
+    def _Tat(nn):  # horizon at which NPV/C = nn along rho* = y_lab
+        return np.log(bc / (nn + 1.0)) / r_lab
+    be = ax.contour(TT, RR, NPV, levels=[0.0], colors='black', linewidths=2.0)
+    ax.clabel(be, manual=[(_Tat(0), y_lab)], fmt={0.0: 'NPV = 0'}, fontsize=8, inline=True)
+    iso = ax.contour(TT, RR, NPV, levels=[1.0, 2.0, 3.0], colors='black', linewidths=0.8)
+    ax.clabel(iso, manual=[(_Tat(1), y_lab), (_Tat(2), y_lab), (_Tat(3), y_lab)],
+              fmt={1.0: 'NPV = 1', 2.0: 'NPV = 2', 3.0: 'NPV = 3'}, fontsize=8, inline=True)
+
+    xlab = Tmax * 0.985
+    for val, lab in [(0.001, 'Stern  $\\rho = 0.1\\%$'),
+                     (0.015, 'Nordhaus  $\\rho = 1.5\\%$')]:
+        ax.axhline(val, color=GK[2], lw=0.9, ls=(0, (5, 4)))
+        ax.text(xlab, val + 0.0008, lab, ha='right', va='bottom', fontsize=9)
+
+    ax.text(52, 0.0050, 'Conserve\n(NPV > 0)', ha='center', va='center', fontsize=10)
+    ax.text(82, 0.0315, 'Reject\n(NPV < 0)', ha='center', va='center', fontsize=10)
+
+    # framework lever: label + arrow as a unit in the left margin, clear of the axis title
+    ax.annotate('', xy=(-0.235, 0.20), xytext=(-0.235, 0.80),
+                xycoords='axes fraction', annotation_clip=False,
+                arrowprops=dict(arrowstyle='-|>', lw=1.2, color=GK[0]))
+    ax.text(-0.275, 0.5,
+            'Institutional anchoring lowers $\\rho^{*}$  ($r = \\rho^{*} + \\eta g$)',
+            transform=ax.transAxes, rotation=90, ha='center', va='center',
+            fontsize=9, color=GK[0], clip_on=False)
+
+    ax.set_xlim(0, Tmax); ax.set_ylim(0, 0.04)
+    ax.set_xlabel('Horizon to benefit, $T$ (years)')
+    ax.set_ylabel('Effective time preference, $\\rho^{*}$')
+    ax.grid(True, alpha=0.2)
+    ax.spines['top'].set_visible(True); ax.spines['right'].set_visible(True)
+    cb = fig.colorbar(cf, ax=ax, pad=0.02, fraction=0.046)
+    cb.set_label('Net present value per unit cost, NPV / C')
+    cb.outline.set_linewidth(0.8)
+    _save(fig, 'figure_8'); return fig
+
+
+def figure_9(eta_g=0.02, ratios=(2, 5, 10, 20), bc_ref=5, Tmax=100):
+    """Break-even frontiers rho* = ln(B/C)/T - eta_g for a family of B/C ratios.
+
+    Conservation clears a cost-benefit test below a curve and fails above it.
+    Shading marks the conserve region for the reference ratio bc_ref.
+    Independent of anchor_framework.
+    """
+    Tb = np.linspace(1, Tmax, 1500)
+    fig, ax = plt.subplots(figsize=(6.4, 4.8))
+
+    rho_ref = np.clip(np.log(bc_ref) / Tb - eta_g, 0, None)
+    ax.fill_between(Tb, 0, rho_ref, color='0.92', zorder=0)
+
+    for bc in ratios:
+        rho_be = np.log(bc) / Tb - eta_g
+        m = rho_be >= 0
+        ax.plot(Tb[m], rho_be[m], color=GK[0], lw=1.4, zorder=3)
+        y_lab = 0.034
+        T_lab = np.log(bc) / (y_lab + eta_g)
+        if T_lab < Tmax:
+            ax.text(T_lab, y_lab, f'$B/C = {bc}$', fontsize=9, ha='center',
+                    va='center', zorder=4,
+                    bbox=dict(boxstyle='round,pad=0.12', fc='white', ec='none', alpha=0.9))
+
+    ax.text(52, 0.0030, 'Conserve region', fontsize=10, ha='center')
+    ax.text(80, 0.0330, 'Reject region', fontsize=10, ha='center')
+
+    ax.set_xlim(0, Tmax); ax.set_ylim(0, 0.04)
+    ax.set_xlabel('Horizon to benefit, $T$ (years)')
+    ax.set_ylabel('Break-even time preference, $\\rho^{*}$')
+    ax.grid(True, alpha=0.2)
+    ax.spines['top'].set_visible(True); ax.spines['right'].set_visible(True)
+    _save(fig, 'figure_9'); return fig
+
+
 def main():
-    for fn in (figure_1, figure_2, figure_3, figure_4, figure_5, figure_6, figure_7):
+    for fn in (figure_1, figure_2, figure_3, figure_4, figure_5, figure_6,
+               figure_7, figure_8, figure_9):
         fn(); plt.close('all')
         print(f"saved {fn.__name__}")
 
